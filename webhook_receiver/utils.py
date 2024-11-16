@@ -26,6 +26,54 @@ logger = logging.getLogger(__name__)
 class SKULookupException(Exception):
     pass
 
+def user_exists_via_api(email):
+    """Check if a user exists in Open edX via the REST API."""
+    client = OAuthAPIClient(
+        settings.WEBHOOK_RECEIVER_LMS_BASE_URL,
+        settings.WEBHOOK_RECEIVER_EDX_OAUTH2_KEY,
+        settings.WEBHOOK_RECEIVER_EDX_OAUTH2_SECRET,
+    )
+
+    user_search_url = f"{settings.WEBHOOK_RECEIVER_LMS_BASE_URL}/api/user/v1/accounts"
+    params = {'email': email}
+    response = client.get(user_search_url, params=params)
+
+    if response.status_code != 200:
+        logger.error(f"Failed to search for user {email}: HTTP {response.status_code}")
+        response.raise_for_status()
+
+    users = response.json()
+    return len(users) > 0
+
+def create_user_via_api(email, password):
+    """Create a new user in Open edX via the REST API."""
+    client = OAuthAPIClient(
+        settings.WEBHOOK_RECEIVER_LMS_BASE_URL,
+        settings.WEBHOOK_RECEIVER_EDX_OAUTH2_KEY,
+        settings.WEBHOOK_RECEIVER_EDX_OAUTH2_SECRET,
+    )
+
+    user_create_url = f"{settings.WEBHOOK_RECEIVER_LMS_BASE_URL}/api/user/v1/account/registration/"
+
+    # create user name from email
+    # user name can only contain letters (A-Z, a-z), numerals (0-9), underscores (_), and hyphens (-)
+    user_name = re.sub(r'[^a-zA-Z0-9_-]', '', email.split("@")[0])
+
+    # Define user data; adjust fields as necessary
+    user_data = {
+            "email": email,
+            "username": user_name,
+            "name": user_name,
+            "password": password,
+        }
+
+    response = client.post(user_create_url, data=user_data)
+
+    if response.status_code != 201:
+        logger.error(f"Failed to create user {email}: HTTP {response.status_code} - {response.text}")
+        response.raise_for_status()
+
+    logger.info(f"User {email} created successfully")
 
 def receive_json_webhook(request):
     # Grab data from the request, and save it to the database right

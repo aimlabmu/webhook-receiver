@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     'webhook_receiver',
     'webhook_receiver_shopify',
     'webhook_receiver_woocommerce',
+    'webhook_receiver_omise',
 ]
 
 MIDDLEWARE = [
@@ -220,5 +221,9 @@ WEBHOOK_RECEIVER_SETTINGS = {
         'require_payment': env.bool(
             'DJANGO_WEBHOOK_RECEIVER_SETTINGS_WOOCOMMERCE_REQUIRE_PAYMENT',
             default=False),
+    },
+    'omise': {
+        'secret': env.str('DJANGO_WEBHOOK_RECEIVER_SETTINGS_OMISE_SECRET', default=''),
+        'send_email': env.bool('DJANGO_WEBHOOK_RECEIVER_SETTINGS_OMISE_SEND_EMAIL', default=True),
     },
 }
