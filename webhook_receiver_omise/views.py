@@ -88,7 +88,7 @@ def payment_confirm(request):
     order, created = record_omise_order(verified_event)
 
     # Determine the processing action based on event type and charge status
-    charge_status = verified_event.get('data', {}).get('object', {}).get('status')
+    charge_status = verified_event.get('data', {}).get('status')
     if event_type == 'charge.create' and charge_status == 'successful':
         if order.status == Order.NEW:
             logger.info(f"Scheduling order {order.id} for processing.")
