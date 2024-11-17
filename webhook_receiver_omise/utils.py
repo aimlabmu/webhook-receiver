@@ -104,9 +104,8 @@ def process_order(order, data):
             order.save()
 
     # Process each line item in the order
-    for item in data['line_items']:
-        process_line_item(order, item)
-        logger.debug(f'Successfully processed line item {item} for order {order.id}')
+    process_line_item(order, data)
+    logger.debug(f'Successfully processed item {data} for order {order.id}')
 
     # Mark the order as processed
     order.finish_processing()
@@ -172,7 +171,7 @@ def process_line_item(order, item):
     # Mark the order item as processed
     order_item, created = OrderItem.objects.get_or_create(
         order=order,
-        sku=item.get('sku', ''),  # Optional: Retain if needed
+        # sku=item.get('sku', ''),  # Optional: Retain if needed
         email=email
     )
 
