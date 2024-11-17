@@ -54,14 +54,14 @@ def payment_confirm(request):
         )
         response.raise_for_status()
         verified_event = response.json()
-        # logger.info(f"Successfully fetched and verified Event ID: {event_id}")
+        logger.info(f"Successfully fetched and verified Event ID: {event_id}")
     except requests.exceptions.RequestException as e:
         logger.error(f"Failed to verify event {event_id} with Omise API: {e}")
         return HttpResponse(status=500)
     except ValueError:
         logger.error("Failed to decode JSON response from Omise API.")
         return HttpResponse(status=500)
-    logger.info(f"Verified event: {verified_event}")
+    # logger.info(f"Verified event: {verified_event}")
     # Ensure the fetched event matches the received event
     if verified_event.get('id') != event_id:
         logger.error(f"Event ID mismatch: received {event_id}, verified {verified_event.get('id')}")

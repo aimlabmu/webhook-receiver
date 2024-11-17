@@ -37,6 +37,7 @@ def send_welcome_email(email, password):
 
 def record_omise_order(data):
     """Record or retrieve an Omise order based on the webhook data."""
+    logger.info(f"Recording Omise order: {data}")
     # Extract charge data from the webhook payload
     charge = data.get('data', {}).get('object', {})
     
