@@ -65,14 +65,7 @@ def record_omise_order(data):
             'email': email,
             'first_name': first_name,
             'last_name': last_name,
-            'amount': amount,
-            'currency': currency,
             'status': Order.NEW if status == 'successful' else Order.ERROR,
-            'metadata': {
-                'course_id': course_id,
-                'charge_id': charge_id,
-                'payment_status': status,
-            }
         }
     )
 
