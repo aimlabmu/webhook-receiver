@@ -13,7 +13,7 @@ from webhook_receiver.utils import (
     finish_and_save,
 )
 from .models import OmiseOrder as Order
-from .utils import record_order
+from .utils import record_omise_order
 from .tasks import process
 
 logger = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ def payment_confirm(request):
         )
         response.raise_for_status()
         verified_event = response.json()
-        logger.info(f"Successfully fetched and verified Event ID: {event_id}")
+        # logger.info(f"Successfully fetched and verified Event ID: {event_id}")
     except requests.exceptions.RequestException as e:
         logger.error(f"Failed to verify event {event_id} with Omise API: {e}")
         return HttpResponse(status=500)
@@ -68,13 +68,13 @@ def payment_confirm(request):
         return HttpResponseBadRequest("Event ID Mismatch")
     
     # Handle only specific event types
-    event_type = verified_event.get('type')
+    event_type = verified_event.get('key')
     logger.info(f"Processing Omise event type: {event_type}")
 
     SUPPORTED_EVENTS = [
+        'charge.create',
         'charge.complete',
         'charge.failed',
-        # Add other relevant event types as needed
     ]
 
     if event_type not in SUPPORTED_EVENTS:
@@ -85,22 +85,21 @@ def payment_confirm(request):
     finish_and_save(data)
 
     # Record the order in the database
-    order, created = record_order(verified_event)
+    order, created = record_omise_order(verified_event)
 
-    # Determine the processing action based on event type
-    if event_type == 'charge.complete':
+    # Determine the processing action based on event type and charge status
+    charge_status = verified_event.get('data', {}).get('object', {}).get('status')
+    if event_type == 'charge.create' and charge_status == 'successful':
         if order.status == Order.NEW:
             logger.info(f"Scheduling order {order.id} for processing.")
             process.delay(verified_event['data']['object'])
         else:
             logger.info(f"Order {order.id} already processed; no action taken.")
-    elif event_type == 'charge.failed':
+    elif charge_status == 'failed':
         logger.warning(f"Charge {order.id} has failed.")
         order.fail()
         order.save()
-        # Optionally, notify the user about the failed payment
-        # send_failure_email(order.email)
     else:
-        logger.info(f"No handler implemented for event type: {event_type}")
+        logger.info(f"No handler implemented for event type: {event_type} with status: {charge_status}")
 
     return HttpResponse(status=200)

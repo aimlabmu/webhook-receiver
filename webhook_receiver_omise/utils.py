@@ -35,6 +35,46 @@ def send_welcome_email(email, password):
     recipient_list = [email]
     send_mail(subject, message, from_email, recipient_list)
 
+def record_omise_order(data):
+    """Record or retrieve an Omise order based on the webhook data."""
+    # Extract charge data from the webhook payload
+    charge = data.get('data', {}).get('object', {})
+    
+    # Extract metadata from the charge
+    metadata = charge.get('metadata', {})
+    email = metadata.get('email')
+    course_id = metadata.get('courseId')
+    
+    # Get basic charge info
+    charge_id = charge.get('id')
+    amount = charge.get('amount')  # Amount in smallest currency unit (satang for THB)
+    currency = charge.get('currency')
+    status = charge.get('status')
+    
+    # Get customer info from card data
+    card = charge.get('card', {})
+    customer_name = card.get('name', '').split(' ', 1)
+    first_name = customer_name[0] if customer_name else ''
+    last_name = customer_name[1] if len(customer_name) > 1 else ''
+
+    return Order.objects.get_or_create(
+        id=charge_id,  # Use charge ID as order ID
+        defaults={
+            'webhook': data,  # Store the entire webhook data
+            'email': email,
+            'first_name': first_name,
+            'last_name': last_name,
+            'amount': amount,
+            'currency': currency,
+            'status': Order.NEW if status == 'successful' else Order.ERROR,
+            'metadata': {
+                'course_id': course_id,
+                'charge_id': charge_id,
+                'payment_status': status,
+            }
+        }
+    )
+
 def record_order(data):
     """Record or retrieve an Omise order based on the webhook data."""
     return Order.objects.get_or_create(
