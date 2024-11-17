@@ -33,12 +33,12 @@ def payment_confirm(request):
 
     try:
         data = receive_json_webhook(request)
+        # Need to access the JSON data from the model instance
+        event_id = data.json.get('id')
     except Exception as e:
         logger.error(f"Failed to parse webhook payload: {e}")
         return HttpResponseBadRequest("Invalid Payload")
 
-    # Extract the event ID from the payload
-    event_id = data.get('id')
     if not event_id:
         logger.error("Webhook payload missing event ID.")
         fail_and_save(data)
