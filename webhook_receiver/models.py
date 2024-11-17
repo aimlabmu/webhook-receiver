@@ -92,7 +92,7 @@ class Order(ConcurrentTransitionMixin, Model):
 
     CHOICES = STATE.CHOICES
 
-    id = BigIntegerField(primary_key=True, editable=False)
+    id = CharField(max_length=255, primary_key=True)
     email = EmailField()
     first_name = CharField(max_length=254)
     last_name = CharField(max_length=254)
