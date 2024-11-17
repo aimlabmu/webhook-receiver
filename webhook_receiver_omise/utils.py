@@ -2,7 +2,7 @@ from django.db import transaction
 from django.conf import settings
 from django.core.mail import send_mail
 from webhook_receiver.utils import enroll_in_course, lookup_course_id, create_user_via_api, user_exists_via_api
-from .models import OmiseOrder as Order, OmiseOrderItem as OrderItem
+from .models import OmiseOrder as Order, OmiseOrderItem as OrderItem, JSONWebhookData
 import logging
 import random
 import string
@@ -44,12 +44,9 @@ def record_omise_order(data):
     # Extract metadata from the charge
     metadata = charge.get('metadata', {})
     email = metadata.get('email')
-    course_id = metadata.get('courseId')
     
     # Get basic charge info
     charge_id = charge.get('id')
-    amount = charge.get('amount')  # Amount in smallest currency unit (satang for THB)
-    currency = charge.get('currency')
     status = charge.get('status')
     
     # Get customer info from card data
@@ -58,10 +55,19 @@ def record_omise_order(data):
     first_name = customer_name[0] if customer_name else ''
     last_name = customer_name[1] if len(customer_name) > 1 else ''
 
+    # Create JSONWebhookData instance
+    webhook_data = JSONWebhookData(
+        content=data,
+        headers={},
+    )
+    webhook_data.save()
+    webhook_data.start_processing()
+    webhook_data.save()
+
     return Order.objects.get_or_create(
         id=charge_id,  # Use charge ID as order ID
         defaults={
-            'webhook': data,  # Store the entire webhook data
+            'webhook': webhook_data,  # Store the entire webhook data
             'email': email,
             'first_name': first_name,
             'last_name': last_name,
