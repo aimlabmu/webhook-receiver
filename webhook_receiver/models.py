@@ -134,7 +134,7 @@ class OrderItem(ConcurrentTransitionMixin, Model):
 
     CHOICES = STATE.CHOICES
 
-    sku = CharField(max_length=254)
+    sku = CharField(max_length=254, null=True)
     email = EmailField()
     status = FSMIntegerField(choices=CHOICES,
                              default=NEW,
