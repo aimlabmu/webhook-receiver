@@ -92,7 +92,7 @@ def payment_confirm(request):
     if event_type == 'charge.create' and charge_status == 'successful':
         if order.status == Order.NEW:
             logger.info(f"Scheduling order {order.id} for processing.")
-            process.delay(verified_event['data']['object'])
+            process.delay(verified_event['data'])
         else:
             logger.info(f"Order {order.id} already processed; no action taken.")
     elif charge_status == 'failed':
