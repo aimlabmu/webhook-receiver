@@ -39,7 +39,7 @@ def record_omise_order(data):
     """Record or retrieve an Omise order based on the webhook data."""
     logger.info(f"Recording Omise order: {data}")
     # Extract charge data from the webhook payload
-    charge = data.get('data', {}).get('object', {})
+    charge = data.get('data', {})
     
     # Extract metadata from the charge
     metadata = charge.get('metadata', {})
