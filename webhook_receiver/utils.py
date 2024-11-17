@@ -28,22 +28,34 @@ class SKULookupException(Exception):
 
 def user_exists_via_api(email):
     """Check if a user exists in Open edX via the REST API."""
-    client = OAuthAPIClient(
-        settings.WEBHOOK_RECEIVER_LMS_BASE_URL,
-        settings.WEBHOOK_RECEIVER_EDX_OAUTH2_KEY,
-        settings.WEBHOOK_RECEIVER_EDX_OAUTH2_SECRET,
-    )
+    try:
+        client = OAuthAPIClient(
+            settings.WEBHOOK_RECEIVER_LMS_BASE_URL,
+            settings.WEBHOOK_RECEIVER_EDX_OAUTH2_KEY,
+            settings.WEBHOOK_RECEIVER_EDX_OAUTH2_SECRET,
+        )
 
-    user_search_url = f"{settings.WEBHOOK_RECEIVER_LMS_BASE_URL}/api/user/v1/accounts"
-    params = {'email': email}
-    response = client.get(user_search_url, params=params)
+        user_search_url = f"{settings.WEBHOOK_RECEIVER_LMS_BASE_URL}/api/user/v1/accounts"
+        params = {'email': email}
+        
+        logger.debug(f"Checking user existence at URL: {user_search_url} with params: {params}")
+        response = client.get(user_search_url, params=params)
 
-    if response.status_code != 200:
-        logger.error(f"Failed to search for user {email}: HTTP {response.status_code}")
-        response.raise_for_status()
+        # Don't raise exception, just check status code
+        if response.status_code == 200:
+            users = response.json()
+            exists = len(users) > 0
+            logger.info(f"User {email} {'exists' if exists else 'does not exist'}")
+            return exists
+        else:
+            # Any non-200 response means user doesn't exist
+            logger.info(f"User {email} not found (status code: {response.status_code})")
+            return False
 
-    users = response.json()
-    return len(users) > 0
+    except Exception as e:
+        logger.error(f"Error checking if user exists for email {email}: {e}")
+        # If we can't check, assume user doesn't exist
+        return False
 
 def create_user_via_api(email, password):
     """Create a new user in Open edX via the REST API."""
