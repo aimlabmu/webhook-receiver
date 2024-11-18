@@ -179,6 +179,7 @@ CACHES = {
 }
 
 # Email configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # Make SMTP explicit
 EMAIL_HOST = os.environ.get('DJANGO_EMAIL_HOST', '')
 EMAIL_PORT = int(os.environ.get('DJANGO_EMAIL_PORT', 587))
 EMAIL_USE_TLS = os.environ.get('DJANGO_EMAIL_USE_TLS', 'True').lower() == 'true'
