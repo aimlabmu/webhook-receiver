@@ -1,3 +1,4 @@
+import os
 from django.db import transaction
 from django.conf import settings
 from django.core.mail import send_mail
@@ -31,6 +32,14 @@ def send_welcome_email(email, password):
     Best regards,
     AIThaiGen Team
     """
+    # Email configuration
+    settings.EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # Make SMTP explicit
+    settings.EMAIL_HOST = os.environ.get('DJANGO_EMAIL_HOST', '')
+    settings.EMAIL_PORT = int(os.environ.get('DJANGO_EMAIL_PORT', 587))
+    settings.EMAIL_USE_TLS = os.environ.get('DJANGO_EMAIL_USE_TLS', 'True').lower() == 'true'
+    settings.EMAIL_HOST_USER = os.environ.get('DJANGO_EMAIL_HOST_USER', '')
+    settings.EMAIL_HOST_PASSWORD = os.environ.get('DJANGO_EMAIL_HOST_PASSWORD', '')
+    settings.DEFAULT_FROM_EMAIL = os.environ.get('DJANGO_DEFAULT_FROM_EMAIL', settings.EMAIL_HOST_USER)
     from_email = settings.DEFAULT_FROM_EMAIL
     recipient_list = [email]
     send_mail(subject, message, from_email, recipient_list)
