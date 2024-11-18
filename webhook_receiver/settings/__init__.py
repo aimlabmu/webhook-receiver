@@ -178,15 +178,6 @@ CACHES = {
                          default="dummycache://"),
 }
 
-# Email configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # Make SMTP explicit
-EMAIL_HOST = os.environ.get('DJANGO_EMAIL_HOST', '')
-EMAIL_PORT = int(os.environ.get('DJANGO_EMAIL_PORT', 587))
-EMAIL_USE_TLS = os.environ.get('DJANGO_EMAIL_USE_TLS', 'True').lower() == 'true'
-EMAIL_HOST_USER = os.environ.get('DJANGO_EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.environ.get('DJANGO_EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.environ.get('DJANGO_DEFAULT_FROM_EMAIL', EMAIL_HOST_USER)
-
 WEBHOOK_RECEIVER_LMS_BASE_URL = env.str(
     'DJANGO_WEBHOOK_RECEIVER_LMS_BASE_URL',
     default='http://localhost:18000')
