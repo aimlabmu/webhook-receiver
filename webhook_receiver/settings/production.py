@@ -7,7 +7,7 @@ from django.conf import settings
 from . import *  # noqa: F403
 
 import os
-import django
+
 
 settings.configure(
   EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend',
@@ -19,7 +19,6 @@ settings.configure(
   DEFAULT_FROM_EMAIL=os.environ.get('DJANGO_EMAIL_HOST_USER', '')
 )
 
-django.setup()
 
 # We inherit all settings from base.py, including the anything set in
 # the environment.  However, if the environment contains the variable
