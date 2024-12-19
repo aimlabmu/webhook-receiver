@@ -89,7 +89,7 @@ def payment_confirm(request):
 
     # Determine the processing action based on event type and charge status
     charge_status = verified_event.get('data', {}).get('status')
-    if event_type == 'charge.create' and charge_status == 'successful':
+    if event_type == 'charge.complete' and charge_status == 'successful':
         if order.status == Order.NEW:
             logger.info(f"Scheduling order {order.id} for processing.")
             process.delay(verified_event['data'])
