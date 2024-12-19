@@ -69,6 +69,8 @@ def payment_confirm(request):
     
     # Handle only specific event types
     event_type = verified_event.get('key')
+    charge_status = verified_event.get('data', {}).get('status')
+
     logger.info(f"Processing Omise event type: {event_type}")
 
     SUPPORTED_EVENTS = [
@@ -80,6 +82,10 @@ def payment_confirm(request):
     if event_type not in SUPPORTED_EVENTS:
         logger.info(f"Ignoring unsupported event type: {event_type}")
         return HttpResponse(status=200)  # Acknowledge receipt
+    
+    if event_type == 'charge.create' and charge_status == 'pending':
+        logger.info("Ignoring pending charge.create event.")
+        return HttpResponse(status=200)  # Acknowledge receipt
 
     # Save and mark as processed
     finish_and_save(data)
@@ -88,8 +94,7 @@ def payment_confirm(request):
     order, created = record_omise_order(verified_event)
 
     # Determine the processing action based on event type and charge status
-    charge_status = verified_event.get('data', {}).get('status')
-    if event_type == 'charge.complete' and charge_status == 'successful':
+    if (event_type == 'charge.create' or event_type == 'charge.complete') and charge_status == 'successful':
         if order.status == Order.NEW:
             logger.info(f"Scheduling order {order.id} for processing.")
             process.delay(verified_event['data'])
